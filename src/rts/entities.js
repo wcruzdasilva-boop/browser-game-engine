@@ -600,11 +600,14 @@ export class Unit extends Entity {
       }
       this.repathT -= dt;
       const moving = this._steer(dt);
-      if (!this.path && !moving) {
-        this.goal = null;
+      // pushing against an obstacle (e.g. a camp built next to the tree) also counts as blocked:
+      // _steer still reports "moving" there, and its re-path leads back to the same wall
+      const stalled = this.path && this.stuckT > 0.3;
+      if ((!this.path && !moving) || stalled) {
+        if (!stalled) this.goal = null;
         o.blockedT = (o.blockedT || 0) + dt;
         if (o.blockedT > 2.5) { o.blockedT = 0; o.side = (o.side || 0) + 1; }
-      } else o.blockedT = 0;
+      } else o.blockedT = Math.max(0, (o.blockedT || 0) - dt);
       if ((o.side || 0) > 5) {
         // unreachable from every side: give up on this node
         (this._skip ||= new Set()).add(t);

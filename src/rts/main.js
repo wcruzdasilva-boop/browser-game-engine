@@ -375,13 +375,7 @@ class RTSGame {
     this.world.update(this.cam.target);
     if (!this.paused) {
       const sdt = Math.min(dt, 0.1) * this.speed;
-      // sub-step the simulation for stability at high speeds
-      const steps = Math.ceil(sdt / 0.06);
-      for (let k = 0; k < steps; k++) {
-        this.sim.update(sdt / steps);
-        this.ai.update(sdt / steps);
-      }
-      this.trees.update(sdt);
+      this.step(sdt);
       this._fx(sdt);
     }
     this.renderer.update(dt);
@@ -392,6 +386,17 @@ class RTSGame {
     this.audio.ambient(dt);
     e.pipeline.cameraSkyLight = 1;
     e.pipeline.heldLight = 0;
+  }
+
+  /** Advances the game world (simulation, AI, falling trees) by sdt seconds. */
+  step(sdt) {
+    // sub-step the simulation for stability at high speeds
+    const steps = Math.ceil(sdt / 0.06);
+    for (let k = 0; k < steps; k++) {
+      this.sim.update(sdt / steps);
+      this.ai.update(sdt / steps);
+    }
+    this.trees.update(sdt);
   }
 
   _fx(dt) {

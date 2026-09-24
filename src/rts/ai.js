@@ -47,7 +47,8 @@ export class AIPlayer {
 
   build(kind, near, builders, minDist, maxDist) {
     if (!this.p.canAfford(BUILDINGS[kind].cost)) return null;
-    const spot = this.findSpot(kind, near, minDist, maxDist);
+    // a grown base fills the preferred ring: look further out before giving up (else houses stop and pop caps out)
+    const spot = this.findSpot(kind, near, minDist, maxDist) || this.findSpot(kind, near, maxDist, maxDist * 1.8);
     if (!spot) return null;
     const b = this.sim.placeBuilding(kind, this.index, spot.x, spot.z);
     if (b) for (const u of builders) u.command({ type: 'build', target: b });
@@ -63,7 +64,7 @@ export class AIPlayer {
     // economic bonus (difficulty)
     if (this.cfg.bonus && sim.time - this.lastBonus > 10) {
       this.lastBonus = sim.time;
-      for (const k of ['food', 'wood', 'gold']) p.res[k] += Math.round(p.gathered[k] * 0.0) + Math.round(8 * this.cfg.bonus * 10);
+      for (const k of ['food', 'wood', 'gold']) p.res[k] += Math.round(80 * this.cfg.bonus);
     }
     const units = sim.units.filter((u) => u.alive && u.owner === this.index);
     const vills = units.filter((u) => u.isVillager);
@@ -121,7 +122,10 @@ export class AIPlayer {
     for (const b of military) {
       if (b.queue.length >= 2) continue;
       const opts = b.def.train.filter((k) => (UNITS[k].age || 0) <= p.age);
-      const choice = opts[Math.floor(Math.random() * opts.length)];
+      // spend a gold surplus on the units that use it (militia, archers, knights)
+      const goldUnits = p.res.gold > 300 ? opts.filter((k) => UNITS[k].cost.gold) : [];
+      const pool = goldUnits.length ? goldUnits : opts;
+      const choice = pool[Math.floor(Math.random() * pool.length)];
       const c = UNITS[choice]?.cost;
       const reserve = saving ? nextAge.cost : {};
       const ok = c && Object.keys(c).every((k) => p.res[k] - c[k] >= (reserve[k] || 0));
@@ -151,10 +155,12 @@ export class AIPlayer {
     if (this.attacking) {
       if (army.length < 3) { this.attacking = false; return; }
       const enemyB = sim.buildings.filter((b) => b.alive && b.owner !== this.index);
-      if (!enemyB.length) return;
+      // no buildings left: hunt the survivors, otherwise the match never ends
+      const targets = enemyB.length ? enemyB : sim.units.filter((u) => u.alive && u.owner >= 0 && u.owner !== this.index && !u.isAnimal);
+      if (!targets.length) return;
       let target = null, bd = 1e9;
       const cx = army.reduce((a, u) => a + u.x, 0) / army.length, cz = army.reduce((a, u) => a + u.z, 0) / army.length;
-      for (const b of enemyB) { const d = Math.hypot(b.x - cx, b.z - cz); if (d < bd) { bd = d; target = b; } }
+      for (const b of targets) { const d = Math.hypot(b.x - cx, b.z - cz); if (d < bd) { bd = d; target = b; } }
       for (const u of army) if (!u.order || u.order.type === 'move' || (u.order.type === 'attack' && !u.order.target?.alive)) u.command({ type: 'attack', target });
     } else {
       // gather idle army near the town center
@@ -180,6 +186,8 @@ export class AIPlayer {
     const want = this.p.age === 0
       ? { food: Math.ceil(n * 0.5), wood: Math.ceil(n * 0.4), gold: Math.floor(n * 0.1), stone: 0 }
       : { food: Math.ceil(n * 0.42), wood: Math.ceil(n * 0.3), gold: Math.ceil(n * 0.2), stone: Math.floor(n * 0.08) };
+    // every unit also costs food: with gold banked, mining more of it only idles the treasury
+    if (this.p.res.gold > 600) { want.food += want.gold; want.gold = 0; }
     for (const u of vills) {
       if (u.order) continue;
       let best = null, gap = -1e9;
