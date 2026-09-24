@@ -16,7 +16,22 @@ npm run dev        # http://localhost:5173  (VoxelCraft)
                    # http://localhost:5173/sandbox.html   (exemplo da engine sem voxels)
                    # http://localhost:5173/textures.html  (laboratório de texturas procedurais)
 npm run build      # build estático em dist/ (pode ser servido por qualquer servidor HTTP)
+npm test           # build + testes no Chromium headless (~3 min)
 ```
+
+### Testes
+`npm test` gera o build e roda os testes de `tests/` (`node:test` + Playwright) num Chromium
+headless com WebGL2 por software (SwiftShader), então não precisa de GPU:
+
+* **páginas** — as quatro páginas carregam e rodam sem exceções, erros no console ou requisições com falha;
+* **VoxelCraft** — o mundo é gerado em volta do jogador e blocos podem ser removidos/colocados;
+* **Reinos** — aldeões alcançam árvores por todos os lados, coleta e depósito via controles, e partidas
+  aceleradas contra a IA (a IA monta a economia e avança de era; no difícil, derrota um jogador parado),
+  verificando invariantes da simulação (sem posições/vida inválidas nem recursos negativos).
+
+Na primeira vez, instale o navegador com `npx playwright install chromium` (ou aponte
+`CHROMIUM_PATH` para um Chromium já instalado). `npm run test:only` roda os testes sem refazer o build.
+As partidas são avançadas com `game.step(dt)` — o mesmo passo de simulação do loop principal.
 
 Requisitos: navegador com WebGL2 + `EXT_color_buffer_float` (Chrome, Edge, Firefox, Safari 16+).
 Uma GPU dedicada é recomendada; em GPUs integradas use o preset **Baixa** ou **Média**.
