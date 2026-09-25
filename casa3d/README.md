@@ -1,18 +1,37 @@
 # Casa3D
 
 Planta baixa, projeção 3D da casa e do telhado, cálculo de material de telhado e passeio
-interno — app desktop em Electron, 100% local, medidas em metros.
+interno — app desktop em Electron para Windows, 100% local, medidas em metros.
 
-**Proposta completa:** [docs/PROPOSTA.md](docs/PROPOSTA.md)
+**Proposta e roteiro:** [docs/PROPOSTA.md](docs/PROPOSTA.md)
+
+## Desenvolvimento
 
 ```bash
 npm install
-npm test                         # testes dos módulos de cálculo/geometria
-npm run dev                      # renderer no navegador (http://localhost:5174)
-CASA3D_DEV_URL=http://localhost:5174 npm run electron   # mesmo renderer dentro do Electron
-npm start                        # build + Electron
+npm run dev          # app Electron com recarga automática
+npm run dev:web      # só a interface, no navegador (http://localhost:5174)
+npm test             # testes (Vitest)
+npm run typecheck    # TypeScript
+npm run build        # typecheck + bundles em out/
+npm run dist:win     # instalador Windows (NSIS) em release/
 ```
 
-Estado atual (fase F0): catálogos, cálculo de telhado (duas águas / uma água / platibanda ×
-Colonial / Plan / Isotelha × madeira / aço), painéis de parede com vãos, cinemática de
-portas e janelas, camadas, shell Electron e tela com a calculadora de telhado.
+## Estado
+
+Fases **F0** (fundação) e **F1** (editor 2D) concluídas: paredes com junções, cômodos e áreas,
+portas e janelas do catálogo, cotas, propriedades, desfazer/refazer, salvar/abrir `.casa3d` e
+calculadora de telhado (duas águas / uma água / platibanda × Colonial / Plan / Isotelha ×
+madeira / aço).
+
+## Atalhos
+
+| Tecla | Ação |
+|---|---|
+| V · P · O · J · C | Selecionar · Parede · Porta · Janela · Cota |
+| Shift | Ortogonal |
+| Espaço + arrastar / roda | Mover vista / zoom |
+| F | Enquadrar a planta |
+| Delete | Excluir seleção |
+| Ctrl+Z · Ctrl+Y | Desfazer · refazer |
+| Ctrl+N · Ctrl+O · Ctrl+S | Novo · abrir · salvar |

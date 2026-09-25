@@ -1,0 +1,23 @@
+// Cores do desenho da planta (papel claro, como prancha).
+export const THEME = {
+  paper: '#ffffff',
+  gridMinor: '#eef1f4',
+  gridMajor: '#d9dee4',
+  axis: '#c3cad2',
+  wallFill: '#3b4046',
+  wallStroke: '#1d2024',
+  roomFill: '#f5efe3',
+  roomFillSelected: '#fde7b0',
+  roomFillHover: '#faeed3',
+  roomText: '#4a4f55',
+  opening: '#1d2024',
+  openingInvalid: '#dc2626',
+  dimension: '#2563eb',
+  selection: '#f59e0b',
+  hover: '#fbbf24',
+  preview: '#16a34a',
+  previewInvalid: '#dc2626',
+  snap: '#db2777',
+  font: '12px system-ui, sans-serif',
+  fontBold: '600 13px system-ui, sans-serif',
+};
