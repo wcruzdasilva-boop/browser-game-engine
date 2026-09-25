@@ -18,8 +18,6 @@ npm run dev        # http://localhost:5173  (VoxelCraft)
 npm run build      # build estático em dist/ (pode ser servido por qualquer servidor HTTP)
 ```
 
-> **Casa3D** (planta baixa + 3D + telhados, Electron) está temporariamente em [`casa3d/`](casa3d/README.md) até ganhar repositório próprio.
-
 Requisitos: navegador com WebGL2 + `EXT_color_buffer_float` (Chrome, Edge, Firefox, Safari 16+).
 Uma GPU dedicada é recomendada; em GPUs integradas use o preset **Baixa** ou **Média**.
 
