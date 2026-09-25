@@ -3,6 +3,7 @@
 
 import type { OpeningModel } from '../../catalog/openings';
 import type { Opening, OpeningOptions, Project, ProjectSettings, Vec2, Wall } from './types';
+import { clean } from '../units';
 
 export const SCHEMA_VERSION = 1;
 
@@ -50,8 +51,8 @@ export function loadProject(data: unknown): Project {
 export function createWall(a: Vec2, b: Vec2, opts: Partial<Omit<Wall, 'id' | 'a' | 'b'>> = {}): Wall {
   return {
     id: newId('wall'),
-    a: { x: a.x, y: a.y },
-    b: { x: b.x, y: b.y },
+    a: { x: clean(a.x), y: clean(a.y) },
+    b: { x: clean(b.x), y: clean(b.y) },
     thickness: opts.thickness ?? DEFAULTS.wallThickness,
     height: opts.height ?? DEFAULTS.wallHeight,
   };

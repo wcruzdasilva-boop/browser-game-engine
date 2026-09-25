@@ -1,4 +1,7 @@
 import type { Vec2 } from '../model/types';
+import { clean } from '../units';
+
+export const cleanVec = (p: Vec2): Vec2 => ({ x: clean(p.x), y: clean(p.y) });
 
 export const v = (x: number, y: number): Vec2 => ({ x, y });
 export const add = (a: Vec2, b: Vec2): Vec2 => ({ x: a.x + b.x, y: a.y + b.y });

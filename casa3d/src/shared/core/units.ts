@@ -7,7 +7,10 @@ export const INCH = 0.0254;
 
 export const roundMm = (m: number): number => Math.round(m / MM) * MM;
 
-export const roundTo = (v: number, step: number): number => Math.round(v / step) * step;
+/** remove o ruído de ponto flutuante (ex.: 20.950000000000003 → 20.95) */
+export const clean = (v: number): number => Math.round(v * 1e6) / 1e6;
+
+export const roundTo = (v: number, step: number): number => clean(Math.round(v / step) * step);
 
 export const formatNumber = (v: number, decimals = 2): string =>
   v.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });

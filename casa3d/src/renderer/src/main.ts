@@ -99,7 +99,14 @@ async function openProject(): Promise<void> {
 async function save(saveAs: boolean): Promise<void> {
   try {
     const path = await saveProjectFile(store.project, store.filePath, saveAs);
-    if (path) store.markSaved(path);
+    if (!path) return;
+    // projeto ainda com o nome padrão: adota o nome do arquivo escolhido
+    const fileName = path.replace(/^.*[\\/]/, '').replace(/\.casa3d$/i, '');
+    if (window.casa3d && store.project.name === 'Novo projeto' && fileName) {
+      store.project.name = fileName.replace(/_/g, ' ');
+      await saveProjectFile(store.project, path);
+    }
+    store.markSaved(path);
   } catch (e) {
     window.alert(`Não foi possível salvar: ${(e as Error).message}`);
   }

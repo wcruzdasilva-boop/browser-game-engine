@@ -37,3 +37,18 @@ test('grade quando nada está perto', () => {
   assert.closeTo(r.point.x, 1.25, 1e-9);
   assert.closeTo(r.point.y, 2.7, 1e-9);
 });
+
+test('traço alinhado para exatamente no eixo da parede que cruza (sem sobrar 5 cm)', () => {
+  const host = createWall({ x: 1.7, y: 16.8 }, { x: 5.85, y: 16.8 });
+  // subindo de (3,70; 13,95) com o cursor 3 cm além do eixo da parede
+  const r = snapPoint({ x: 3.705, y: 16.83 }, { walls: [host], tolerance: 0.15, gridStep: 0.05, from: { x: 3.7, y: 13.95 } });
+  assert.equal(r.kind, 'parede');
+  assert.closeTo(r.point.x, 3.7, 1e-9);
+  assert.closeTo(r.point.y, 16.8, 1e-9);
+});
+
+test('coordenadas da grade saem sem ruído de ponto flutuante', () => {
+  const r = snapPoint({ x: 20.951, y: -0.449 }, { walls: [], tolerance: 0.01, gridStep: 0.05 });
+  assert.equal(r.point.x, 20.95);
+  assert.equal(r.point.y, -0.45);
+});

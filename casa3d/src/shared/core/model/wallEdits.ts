@@ -3,7 +3,8 @@
 // ponto mais próximo sobre a nova posição da parede (ao esticar, fica onde estava).
 
 import type { Wall } from './types';
-import { projectOnSegment } from '../geometry/vec';
+import { add, cross, dist, dot, normalize, projectOnSegment, scale, sub } from '../geometry/vec';
+import type { Vec2 } from './types';
 
 const TOL = 1e-3;
 
@@ -41,4 +42,30 @@ export function applyAttachments(walls: Wall[], attachments: Attachment[]): void
 /** Paredes com extremidade no ponto p. */
 export function wallsAt(walls: Wall[], p: { x: number; y: number }): Set<string> {
   return new Set(walls.filter((w) => Math.hypot(w.a.x - p.x, w.a.y - p.y) < TOL || Math.hypot(w.b.x - p.x, w.b.y - p.y) < TOL).map((w) => w.id));
+}
+
+/**
+ * Trechos de a→b que ainda não estão cobertos por paredes colineares existentes — evita
+ * desenhar a mesma parede duas vezes. Trechos menores que 1 cm são descartados.
+ */
+export function uncoveredSpans(a: Vec2, b: Vec2, walls: Wall[]): [Vec2, Vec2][] {
+  const length = dist(a, b);
+  if (length < 1e-9) return [];
+  const d = normalize(sub(b, a));
+  let spans: [number, number][] = [[0, length]];
+  for (const w of walls) {
+    if (Math.abs(cross(sub(w.a, a), d)) > TOL || Math.abs(cross(sub(w.b, a), d)) > TOL) continue;
+    const t0 = dot(sub(w.a, a), d);
+    const t1 = dot(sub(w.b, a), d);
+    const lo = Math.min(t0, t1);
+    const hi = Math.max(t0, t1);
+    spans = spans.flatMap(([s, e]): [number, number][] => {
+      if (hi <= s + TOL || lo >= e - TOL) return [[s, e]];
+      const out: [number, number][] = [];
+      if (lo > s + TOL) out.push([s, lo]);
+      if (hi < e - TOL) out.push([hi, e]);
+      return out;
+    });
+  }
+  return spans.filter(([s, e]) => e - s >= 0.01).map(([s, e]) => [add(a, scale(d, s)), add(a, scale(d, e))]);
 }

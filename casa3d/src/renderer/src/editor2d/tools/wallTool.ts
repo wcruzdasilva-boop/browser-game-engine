@@ -5,8 +5,9 @@
 // inteira é recalculado com cantos em quina, para as medidas digitadas valerem na face.
 
 import { createWall } from '@shared/core/model/project';
+import { uncoveredSpans } from '@shared/core/model/wallEdits';
 import type { Vec2 } from '@shared/core/model/types';
-import { add, dist, leftNormal, normalize, offsetPolyline, scale, sub } from '@shared/core/geometry/vec';
+import { add, cleanVec, dist, leftNormal, normalize, offsetPolyline, scale, sub } from '@shared/core/geometry/vec';
 import { formatNumber, parseLength } from '@shared/core/units';
 import type { Draw } from '../draw';
 import { THEME } from '../theme';
@@ -63,20 +64,31 @@ export class WallTool extends BaseTool {
     const closing = !!this.chainStart && this.chain.length >= 3 && dist(p, this.chainStart) < 1e-6;
     if (!closing) this.chain.push(p);
     const offset = opts.align === 'eixo' ? 0 : (opts.align === 'face-esquerda' ? -1 : 1) * (opts.thickness / 2);
-    const axis = offsetPolyline(this.chain, offset, closing);
-    const ids = this.chainWalls;
-    const created = createWall(from, p, { thickness: opts.thickness, height: opts.height });
-    this.store.edit('Desenhar parede', (proj) => {
-      proj.walls.push(created);
-      ids.push(created.id);
-      // reposiciona toda a cadeia sobre o eixo calculado
-      ids.forEach((id, i) => {
-        const w = proj.walls.find((x) => x.id === id);
-        if (!w) return;
-        w.a = { ...axis[i]! };
-        w.b = { ...axis[(i + 1) % axis.length]! };
+    const wallOpts = { thickness: opts.thickness, height: opts.height };
+    if (offset === 0) {
+      // pelo eixo: só cria os trechos que ainda não têm parede (sem duplicar)
+      const spans = uncoveredSpans(from, p, this.store.project.walls);
+      if (spans.length) {
+        this.store.edit('Desenhar parede', (proj) => {
+          for (const [a, b] of spans) proj.walls.push(createWall(a, b, wallOpts));
+        });
+      }
+    } else {
+      const axis = offsetPolyline(this.chain, offset, closing);
+      const ids = this.chainWalls;
+      const created = createWall(from, p, wallOpts);
+      this.store.edit('Desenhar parede', (proj) => {
+        proj.walls.push(created);
+        ids.push(created.id);
+        // reposiciona toda a cadeia sobre o eixo calculado
+        ids.forEach((id, i) => {
+          const w = proj.walls.find((x) => x.id === id);
+          if (!w) return;
+          w.a = cleanVec(axis[i]!);
+          w.b = cleanVec(axis[(i + 1) % axis.length]!);
+        });
       });
-    });
+    }
     this.lastDir = normalize(sub(p, from));
     this.typed = '';
     if (closing) this.finish();
